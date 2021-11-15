@@ -1,14 +1,17 @@
 
 
 # Initial imports
-import os
-
+#
+import time
 import dlib
+
+
+import os
 from face_recognition.face_recognition_cli import image_files_in_folder
 import pandas as pd
 import numpy as np
-#import matplotlib.pyplot as plt
 import face_recognition as fr
+
 from PIL import Image, ImageDraw
 
 def Gaussian(distance, sigma = 9.0):
@@ -32,7 +35,7 @@ def minkowski_distance(a, b, p=1):
     return distance
 
 
-def knn_predict(X_train, X_test, y_train, y_test, k, p):
+def knn_predict(X_train, X_test, y_train, k, p = 2, sigma = 9.0):
     # Counter to help with label voting
     # from collections import Counter
 
@@ -51,41 +54,38 @@ def knn_predict(X_train, X_test, y_train, y_test, k, p):
 
         # Store distances in a dataframe
         # print(distances)
-        df_dists= pd.DataFrame(data=distances, columns=['dist'],
-                                index=y_train)
-
+        df_dists= pd.DataFrame(data=distances, columns=['dist'])
+        #df_dists['labels'] = y_train
+        #print(df_dists)
         # Sort distances, and only consider the k closest points
         df_nn = df_dists.sort_values(by=['dist'], axis=0)[:k]
-
-        print(df_nn)
+        df_in = df_nn.to_dict(orient='split').get('index')
+        #print(df_in)
         df_sort = df_nn.to_dict(orient='list').get('dist')
-        dict_split = df_nn.to_dict(orient='split')
-
-        df_index = dict_split.get('index')
-        dict_sort = dict(zip(df_index,df_sort))
-
+       # print(df_sort)
+        df_index = []
+        for index in df_in:
+            df_index.append(y_train[index])
+        #print(df_index)
+        counts = {}
         classCount = {}
         for i in range(k):
             voteIlabel = df_index[i]
             # Gewichtung
-            weight = Gaussian(df_sort[i], sigma=9.0)
+            weight = Gaussian(df_sort[i], sigma=sigma)
             classCount[voteIlabel] = classCount.get(voteIlabel, 0) + weight
-        sortedClassCount = sorted(classCount.items(), key=lambda x:x[1], reverse=True)
-        print(df_sort)
-        print(dict_sort)
-        print(df_index)
+            counts[voteIlabel] = counts.get(voteIlabel,0) + 1
 
+        #for k,v in classCount.items():
+            #classCount[k] = v/counts.get(k,1)
+
+        sortedClassCount = sorted(classCount.items(), key=lambda x:x[1], reverse=True)
 
         # Takes the first distance value and determines if it is less than the threshold value
-        dis = df_nn.get_values()[:1]
+        dis = df_sort[0]
+        #print(dis)
+        if(dis <= 5):
 
-        if(dis <= 0.5):
-
-            # Create counter object to track the labels of k closest neighbors
-            # counter = Counter(df_nn.index)
-
-            # Get most common label of all the nearest neighbors
-            # prediction = counter.most_common()[0][0]
             prediction = sortedClassCount[0][0]
 
         else:
@@ -93,7 +93,7 @@ def knn_predict(X_train, X_test, y_train, y_test, k, p):
 
         # Append prediction to output list
         y_hat_test.append(prediction)
-
+        #print(y_hat_test)
 
     return y_hat_test
 
@@ -102,24 +102,29 @@ def knn_face_recognition(train_path,test_path):
     print("Training KNN classifier ~~~~")
     X=[]
     Y=[]
-    #Iterate through each person in the training set. "class_dir" is the name of the person obtained
+    #Iterate through each person in the training set.
+    #"class_dir" is the name of the person obtained
     for class_dir in os.listdir(train_path):
         if not os.path.isdir(os.path.join(train_path,class_dir)):
             continue
 
-        #Iterate through each image of the person, img_path is the name of an image in the specific person's folder that was obtained
+        #Iterate through each image of the person,
+        #img_path is the name of an image in the specific person's folder that was obtained
         for img_path in image_files_in_folder(os.path.join(train_path,class_dir)):
             try:
                 image = fr.load_image_file(img_path)
                 boxes = fr.face_locations(image)
+                print(img_path)
 
-            #print(img_path)
-                X.append(fr.face_encodings(image,known_face_locations=boxes)[0])  #Returns a vector of 128 dimensions
+                # Returns a vector of 128 dimensions
+                X.append(fr.face_encodings(image,known_face_locations=boxes)[0])
                 Y.append(class_dir)
+
             except:
                 print('failed!')
 
     print("Training finished !!!!!")
+    t1 = time.perf_counter()
 
     for image_file in os.listdir(test_path):
         full_file_path = os.path.join(test_path, image_file)
@@ -140,11 +145,16 @@ def knn_face_recognition(train_path,test_path):
         #Face encoding of test images
             encondings = fr.face_encodings(X_img, known_face_locations=X_face_locations)[i].reshape(1, -1)
 
-            predicts=knn_predict(X_train=X, X_test=encondings, y_train=Y, y_test=[], k=3, p=2)
+            predicts=knn_predict(X_train=X, X_test=encondings, y_train=Y, k=3, p=2, sigma=9.0)
 
             preds.append([predicts, loc])
 
-        show_names_on_image(os.path.join(test_path, image_file), preds)
+        #show_names_on_image(os.path.join(test_path, image_file), preds)\
+        for pre in preds:
+            print('Labels for prediction points:%s' % pre)
+
+    t2 = time.perf_counter()
+    print('knn algorithm time consuming:{:.4f}s'.format(t2 - t1))
 
     return  preds
 
