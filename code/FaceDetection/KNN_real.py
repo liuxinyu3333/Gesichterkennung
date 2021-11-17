@@ -35,7 +35,7 @@ def minkowski_distance(a, b, p=1):
     return distance
 
 
-def knn_predict(X_train, X_test, y_train, k, p = 2, sigma = 9.0):
+def knn_predict(X_train, X_test, y_train, k, p = 2):
     # Counter to help with label voting
     # from collections import Counter
 
@@ -58,10 +58,68 @@ def knn_predict(X_train, X_test, y_train, k, p = 2, sigma = 9.0):
         #df_dists['labels'] = y_train
         #print(df_dists)
         # Sort distances, and only consider the k closest points
-        df_nn = df_dists.sort_values(by=['dist'], axis=0)[:k]
-        df_in = df_nn.to_dict(orient='split').get('index')
+        df_nn = df_dists.sort_values(by=['dist'], axis=0)[:k]#dataframe (Sort and retain only the first k items)
+        df_in = df_nn.to_dict(orient='split').get('index')#dictionary of index
         #print(df_in)
-        df_sort = df_nn.to_dict(orient='list').get('dist')
+        df_sort = df_nn.to_dict(orient='list').get('dist')#dictionary of distances
+        # print(df_sort)
+        df_index = []
+        for index in df_in:
+            df_index.append(y_train[index])#list of label(Condidate)
+        #print(df_index)
+        counts = {}
+
+        for i in range(k):
+            voteIlabel = df_index[i]
+            counts[voteIlabel] = counts.get(voteIlabel,0) + 1
+
+
+        sortedClassCount = sorted(counts.items(), key=lambda x:x[1], reverse=True)
+
+        # Takes the first distance value and determines if it is less than the threshold value
+        dis = df_sort[0]
+        #print(dis)
+        if(dis <= 5):
+
+            prediction = sortedClassCount[0][0]
+
+        else:
+            prediction = 'unknow'
+
+        # Append prediction to output list
+        y_hat_test.append(prediction)
+        #print(y_hat_test)
+
+    return y_hat_test
+
+
+def weighted_knn_predict(X_train, X_test, y_train, k, p = 2, sigma = 9.0):
+    # Counter to help with label voting
+    # from collections import Counter
+
+    # Make predictions on the test data
+    # Need output of 1 prediction per test data point
+
+    y_hat_test = []
+
+    for test_point in X_test:
+        distances = []
+
+        for train_point in X_train:
+            distance = minkowski_distance(test_point, train_point, p=p)
+            distances.append(distance)
+
+
+        # Store distances in a dataframe
+        # print(distances)
+        df_dists= pd.DataFrame(data=distances, columns=['dist'])
+        #df_dists['labels'] = y_train
+        #print(df_dists)
+        # Sort distances, and only consider the k closest points
+        df_nn = df_dists.sort_values(by=['dist'], axis=0)[:k]  # dataframe (Sort and retain only the first k items)
+        df_in = df_nn.to_dict(orient='split').get('index')  # dictionary of index
+        # print(df_in)
+        df_sort = df_nn.to_dict(orient='list').get('dist')  # dictionary of distances
        # print(df_sort)
         df_index = []
         for index in df_in:
@@ -76,8 +134,8 @@ def knn_predict(X_train, X_test, y_train, k, p = 2, sigma = 9.0):
             classCount[voteIlabel] = classCount.get(voteIlabel, 0) + weight
             counts[voteIlabel] = counts.get(voteIlabel,0) + 1
 
-        #for k,v in classCount.items():
-            #classCount[k] = v/counts.get(k,1)
+        for k,v in classCount.items():
+            classCount[k] = v/counts.get(k,1)
 
         sortedClassCount = sorted(classCount.items(), key=lambda x:x[1], reverse=True)
 
@@ -96,6 +154,7 @@ def knn_predict(X_train, X_test, y_train, k, p = 2, sigma = 9.0):
         #print(y_hat_test)
 
     return y_hat_test
+
 
 def knn_face_recognition(train_path,test_path):
 

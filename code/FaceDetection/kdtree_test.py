@@ -71,7 +71,7 @@ t3 = time.perf_counter()#Brute force search start time
 
 for test_point in X_test:
     y_hat_test.append(
-        kt.knn_predict(X_train=X, X_test=test_point.reshape(1, -1), y_train=Y, k=3, p=1, sigma=1)[0])
+        kt.knn_predict(X_train=X, X_test=test_point.reshape(1, -1), y_train=Y, k=3, p=1)[0])
 
 t4 = time.perf_counter()#Brute force search end time and kd tree search start time
 
@@ -105,29 +105,3 @@ print("Accuracy without kd tree: {:.4f}".format((count / len(Y_test))*100))
 print("Accuracy with kd tree: {:.4f}".format((count_kd / len(Y_test))*100))
 
 
-
-#Testing the effect of different k, p, and sigma on the accuracy of knn
-#for s in range(1,10):
-    #y_hat_test = []
-    #for test_point in X_test:
-        #y_hat_test.append(
-            #kt.knn_predict(X_train=X, X_test=test_point.reshape(1, -1), y_train=Y, k=10, p=1, sigma=s)[0])
-
-# count = 0
-    # Calculation Accuracy
-#  for i in range(len(Y_test)):
-#     if Y_test[i] == y_hat_test[i]:
-#         count = count + 1
-
-#    print("Accuracy: ")
-#   print(count / len(Y_test))
-#    accuracies.append(count / len(Y_test))
-
-# Plot the results
-
-#plt.plot(range(1,10), accuracies)
-#plt.xlabel('# of Nearest Neighbors (k)')
-#plt.xlabel('# of minkowski_distance (p)')
-#plt.xlabel('# of Weighted knn (sigma)')
-#plt.ylabel('Accuracy (%)')
-#plt.show()
