@@ -1,4 +1,3 @@
-
 import KNN_real as kt
 import os
 from face_recognition.face_recognition_cli import image_files_in_folder
@@ -51,21 +50,27 @@ y_hat_test = []#Prediction results of knn algorithm without kd tree construction
 #Testing the effect of different k, p, and sigma on the accuracy of knn
 for k in range(1,len(Y)+1):
     y_hat_test = []
-
+    count = 0  # right result of knn
+    im = 0
     for test_point in X_test:#Traverse all faces to be predicted
         #Predict face identity by weighted knn
-        label = kt.knn_predict(X_train=X, X_test=test_point.reshape(1, -1), y_train=Y, k=k, p=1)[0]
+        label = kt.knn_predict(X_train=X, X_test=test_point.reshape(1, -1), y_train=Y, k=k, p=1)
+        if len(label) > 1:
+            print("many result:", im)
+            for la in label:
+                if la == Y_test[im]:
+                    count = count + 1
+                    break
+        else:
+            print("one result:", im)
         #Forecast result storage
-        y_hat_test.append(label)
+            if label[0] == Y_test[im]:
+                count = count + 1
+        im += 1
 
-    count = 0 # right result of knn
     # Calculation Accuracy
-    for i in range(len(Y_test)):
-        # Comparison of test results and test set labels
-        if Y_test[i] == y_hat_test[i]:
-            count = count + 1
 
-    print("Accuracy : {:.2f} bei %, k : ".format((count / len(Y_test)) * 100), format(k))
+    print("Accuracy : {:.2f}%, bei  k : ".format((count / len(Y_test)) * 100), format(k))
     accuracies.append(count / len(Y_test))
 
 # Plot the results

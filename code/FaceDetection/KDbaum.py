@@ -7,9 +7,9 @@ import os
 from face_recognition.face_recognition_cli import image_files_in_folder
 
 import numpy as np
-#import matplotlib.pyplot as plt
+
 import face_recognition as fr
-from PIL import Image, ImageDraw
+
 
 class Node(object):
 

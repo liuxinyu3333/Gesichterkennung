@@ -75,20 +75,33 @@ def knn_predict(X_train, X_test, y_train, k, p = 2):
 
 
         sortedClassCount = sorted(counts.items(), key=lambda x:x[1], reverse=True)
-
+        same_predict = []
         # Takes the first distance value and determines if it is less than the threshold value
         dis = df_sort[0]
         #print(dis)
         if(dis <= 5):
-
-            prediction = sortedClassCount[0][0]
+            if len(sortedClassCount)>1:
+                for i in range(len(sortedClassCount)-1):#Traverse all candidates
+                    if sortedClassCount[i][1] == sortedClassCount[i+1][1]:#If there are the same number of candidates
+                        #Store the same number of candidates in list same_predict
+                        same_predict.append(sortedClassCount[i][0])
+                        same_predict.append(sortedClassCount[i+1][0])
+                s = set(same_predict)#De-duplication
+                same_predict = [i for i in s]#Convert set to list
+                if len(same_predict) > 1:
+                    return same_predict
+                else:
+                    prediction = sortedClassCount[0][0]
+            else:
+                prediction = sortedClassCount[0][0]
 
         else:
             prediction = 'unknow'
 
         # Append prediction to output list
         y_hat_test.append(prediction)
-        #print(y_hat_test)
+
+    #print(y_hat_test)
 
     return y_hat_test
 

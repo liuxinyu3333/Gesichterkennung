@@ -51,12 +51,12 @@ y_hat_test = []#Prediction results of knn algorithm
 
 #Testing the effect of different k on the accuracy of knn
 
-for k in range(1,len(Y)+1):
+for k in range(1,10):
     y_hat_test = []
 
     for test_point in X_test:#Traverse all faces to be predicted
         #Predict face identity by weighted knn
-        label = kt.weighted_knn_predict(X_train=X, X_test=test_point.reshape(1, -1), y_train=Y, k=k, p=1, sigma = 9)[0]
+        label = kt.weighted_knn_predict(X_train=X, X_test=test_point.reshape(1, -1), y_train=Y, k=1, p=1, sigma = k)[0]
         #Forecast result storage
         y_hat_test.append(label)
 
@@ -68,13 +68,13 @@ for k in range(1,len(Y)+1):
         if Y_test[i] == y_hat_test[i]:
             count = count + 1
 
-    print("Accuracy : {:.2f} %, bei k : ".format((count / len(Y_test)) * 100), format(k))
+    print("Accuracy : {:.2f} %bei , k : ".format((count / len(Y_test)) * 100), format(k))
     accuracies.append(count / len(Y_test))
 
 
 # Plot the results
 
-plt.plot(range(1,len(Y)+1), accuracies,label = "knn")
+plt.plot(range(1,10), accuracies,label = "knn")
 plt.xlabel('# of Nearest Neighbors (k)')
 #plt.xlabel('# of minkowski_distance (p)')
 #plt.xlabel('# of Weighted knn (sigma)')

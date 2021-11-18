@@ -1,10 +1,9 @@
 import numpy as np
-import pandas as pd
 import KNN_real as kt
 import KDbaum as kb
 import os
+
 from face_recognition.face_recognition_cli import image_files_in_folder
-import matplotlib.pyplot as plt
 import face_recognition as fr
 import time
 
