@@ -25,7 +25,7 @@ for class_dir in os.listdir("examples/Harrypotter"):#Traverse the folders under 
             print('failed!')
 print("Training finished !!!!!")
 X_test = []
-Y_test = []
+Y_test = []# Real results in the test set
 
 for class_dir in os.listdir("examples/Harrypotter_test"):
     if not os.path.isdir(os.path.join("examples/Harrypotter_test", class_dir)):
@@ -45,7 +45,7 @@ for class_dir in os.listdir("examples/Harrypotter_test"):
 
 
 accuracies = []
-y_hat_test = []#Prediction results of knn algorithm without kd tree construction
+y_hat_test = []#Prediction results
 
 #Testing the effect of different k, p, and sigma on the accuracy of knn
 for k in range(1,len(Y)+1):
@@ -54,8 +54,8 @@ for k in range(1,len(Y)+1):
     im = 0
     for test_point in X_test:#Traverse all faces to be predicted
         #Predict face identity by weighted knn
-        label = kt.knn_predict(X_train=X, X_test=test_point.reshape(1, -1), y_train=Y, k=k, p=1)
-        if len(label) > 1:
+        label = kt.knn_predict(X_train=X, X_test=test_point.reshape(1, -1), y_train=Y, k=k, p=1, threshold = 5)
+        if len(label) > 1:#The predicted result is not unique
             print("many result:", im)
             for la in label:
                 if la == Y_test[im]:
@@ -67,9 +67,7 @@ for k in range(1,len(Y)+1):
             if label[0] == Y_test[im]:
                 count = count + 1
         im += 1
-
     # Calculation Accuracy
-
     print("Accuracy : {:.2f}%, bei  k : ".format((count / len(Y_test)) * 100), format(k))
     accuracies.append(count / len(Y_test))
 
@@ -77,7 +75,6 @@ for k in range(1,len(Y)+1):
 
 plt.plot(range(1,len(Y)+1), accuracies)
 plt.xlabel('# of Nearest Neighbors (k)')
-#plt.xlabel('# of minkowski_distance (p)')
-#plt.xlabel('# of Weighted knn (sigma)')
+
 plt.ylabel('Accuracy (%)')
 plt.show()

@@ -5,11 +5,10 @@ import time
 import os
 
 from face_recognition.face_recognition_cli import image_files_in_folder
-
 import numpy as np
-
+#import matplotlib.pyplot as plt
 import face_recognition as fr
-
+from PIL import Image, ImageDraw
 
 class Node(object):
 
@@ -82,12 +81,30 @@ class Kd_Tree(object):
 
         return node
 
+
+    def similarity(self, a, b, sigma=9.0):
+        # Store the number of dimensions
+        dim = len(a)
+
+        # Set initial weight to 0
+        weight = 0
+        # Calculate similarity
+        for d in range(dim):
+            # Weight the difference in each dimension with Gaussian function
+            # and add up the weights of all dimensions
+            weight += np.exp(-abs(a[d] - b[d]) ** 2 / (2 * sigma ** 2))
+        # Get overall geometric similarity
+        sim = weight / dim
+
+        return sim
+
+
     def Gaussian(self, distance, sigma=9.0):
         # Input a distance and return it`s weight
         weight = np.exp(-distance ** 2 / (2 * sigma ** 2))
         return weight
 
-    def minkowski_distance(self, a, b, p=1):
+    def minkowski_distance(self, a, b, p=2):
         # Store the number of dimensions
         dim = len(a)
 
@@ -160,7 +177,7 @@ class Kd_Tree(object):
                 break  #If you return to the root node, the loop ends
 
             parent = node.parent
-            par_dis = np.sqrt(sum((values - parent.values) ** 2))
+            par_dis = self.minkowski_distance(values, parent.values)
 
             # Calculate the distance between the parent node and the test point,
             # and compare it with the maximum distance in the node list
@@ -174,7 +191,7 @@ class Kd_Tree(object):
 
             # Determine the size of the distance between the sample to be judged and
             # the dividing line of the current node and the maximum distance in the current node list
-            if k > len(node_list) or abs(values[parent.split] - parent.values[parent.split]) < neigh_dis:
+            if k > len(node_list) or abs(values[parent.split] - parent.values[parent.split]) < neigh_dis:#The distance from the point to be measured to the upper segmentation plane
                 # The current node has other branches
                 other_child = parent.left_child if parent.left_child != node else parent.right_child
                 if other_child != None:
@@ -192,7 +209,7 @@ class Kd_Tree(object):
         node_list = node_list[:k]
         # Store the number of occurrences of each label and the weight of each label in the dictionary
         for n in node_list:
-            label_weight[n[2]] = label_weight.get(n[2],0)+self.Gaussian(n[0],sigma=sigma)
+            label_weight[n[2]] = label_weight.get(n[2], 0) + self.similarity(a=values, b=n[1], sigma=sigma)
             label_dict[n[2]] = label_dict.get(n[2], 0) + 1
 
         for k,v in label_weight.items():
@@ -202,7 +219,7 @@ class Kd_Tree(object):
         sorted_label = sorted(label_weight.items(), key=lambda x: x[1], reverse=True)
 
         # Return a list of the label with the largest weight and the k nodes closest to the sample to be judged
-        return sorted_label[0][0], node_list
+        return sorted_label[0][0]
 
 
     def left_search(self, values, node, nodeList, k):

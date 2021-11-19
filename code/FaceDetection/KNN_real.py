@@ -34,137 +34,130 @@ def minkowski_distance(a, b, p=1):
 
     return distance
 
+def similarity(a, b, sigma = 9.0):
+    # Store the number of dimensions
+    dim = len(a)
 
-def knn_predict(X_train, X_test, y_train, k, p = 2):
+    # Set initial weight to 0
+    weight = 0
+    # Calculate similarity
+    for d in range(dim):
+        # Weight the difference in each dimension with Gaussian function
+        # and add up the weights of all dimensions
+        weight += np.exp(-abs(a[d] - b[d])**2/(2*sigma**2))
+    #Get overall geometric similarity
+    sim = weight/dim
+
+    return sim
+
+
+
+def knn_predict(X_train, X_test, y_train, k, p = 2, threshold = 0.5):
     # Counter to help with label voting
     # from collections import Counter
 
     # Make predictions on the test data
     # Need output of 1 prediction per test data point
-
     y_hat_test = []
-
     for test_point in X_test:
         distances = []
 
         for train_point in X_train:
             distance = minkowski_distance(test_point, train_point, p=p)
             distances.append(distance)
-
-
         # Store distances in a dataframe
-        # print(distances)
         df_dists= pd.DataFrame(data=distances, columns=['dist'])
-        #df_dists['labels'] = y_train
-        #print(df_dists)
+
         # Sort distances, and only consider the k closest points
         df_nn = df_dists.sort_values(by=['dist'], axis=0)[:k]#dataframe (Sort and retain only the first k items)
-        df_in = df_nn.to_dict(orient='split').get('index')#dictionary of index
-        #print(df_in)
-        df_sort = df_nn.to_dict(orient='list').get('dist')#dictionary of distances
-        # print(df_sort)
-        df_index = []
-        for index in df_in:
-            df_index.append(y_train[index])#list of label(Condidate)
-        #print(df_index)
+        List_index = df_nn.to_dict(orient='split').get('index')#Converted into a dictionary, and take the index as a list
+        List_sort = df_nn.to_dict(orient='list').get('dist')#Converted into a dictionary, and take the distances as a list
+        label_index = []#Create a list of candidate labels
+        for index in List_index:
+            label_index.append(y_train[index])#list of label(Condidate)
+
         counts = {}
-
         for i in range(k):
-            voteIlabel = df_index[i]
-            counts[voteIlabel] = counts.get(voteIlabel,0) + 1
-
-
-        sortedClassCount = sorted(counts.items(), key=lambda x:x[1], reverse=True)
+            voteIlabel = label_index[i]
+            counts[voteIlabel] = counts.get(voteIlabel,0) + 1#Create a dictionary of candidate labels and numbers
+        sortedClassCount = sorted(counts.items(), key=lambda x:x[1], reverse=True)#Sort by number of candidates
         same_predict = []
         # Takes the first distance value and determines if it is less than the threshold value
-        dis = df_sort[0]
+        dis = List_sort[0]
         #print(dis)
-        if(dis <= 5):
+        if(dis <= threshold):
             if len(sortedClassCount)>1:
                 for i in range(len(sortedClassCount)-1):#Traverse all candidates
                     if sortedClassCount[i][1] == sortedClassCount[i+1][1]:#If there are the same number of candidates
-                        #Store the same number of candidates in list same_predict
+                        #Store the candidates in list same_predict
                         same_predict.append(sortedClassCount[i][0])
                         same_predict.append(sortedClassCount[i+1][0])
                 s = set(same_predict)#De-duplication
                 same_predict = [i for i in s]#Convert set to list
-                if len(same_predict) > 1:
+                if len(same_predict) >1:
                     return same_predict
                 else:
                     prediction = sortedClassCount[0][0]
             else:
                 prediction = sortedClassCount[0][0]
-
         else:
             prediction = 'unknow'
-
         # Append prediction to output list
         y_hat_test.append(prediction)
-
-    #print(y_hat_test)
-
     return y_hat_test
 
 
-def weighted_knn_predict(X_train, X_test, y_train, k, p = 2, sigma = 9.0):
+def weighted_knn_predict(X_train, X_test, y_train, k = 10, sigma = 9.0, threshold = 0.9):
     # Counter to help with label voting
     # from collections import Counter
 
     # Make predictions on the test data
     # Need output of 1 prediction per test data point
-
     y_hat_test = []
 
     for test_point in X_test:
-        distances = []
-
+        sim = []
+        #Get the similarity between the face to be predicted and each sample face
         for train_point in X_train:
-            distance = minkowski_distance(test_point, train_point, p=p)
-            distances.append(distance)
+            s = similarity(test_point, train_point,sigma = sigma)
+            sim.append(s)
 
+        # Store similarities in a dataframe
+        df_dists= pd.DataFrame(data=sim, columns=['dist'])
 
-        # Store distances in a dataframe
-        # print(distances)
-        df_dists= pd.DataFrame(data=distances, columns=['dist'])
-        #df_dists['labels'] = y_train
-        #print(df_dists)
-        # Sort distances, and only consider the k closest points
-        df_nn = df_dists.sort_values(by=['dist'], axis=0)[:k]  # dataframe (Sort and retain only the first k items)
-        df_in = df_nn.to_dict(orient='split').get('index')  # dictionary of index
-        # print(df_in)
-        df_sort = df_nn.to_dict(orient='list').get('dist')  # dictionary of distances
-       # print(df_sort)
-        df_index = []
-        for index in df_in:
-            df_index.append(y_train[index])
-        #print(df_index)
+        # dataframe (Sort and retain only the first k items)
+        df_nn = df_dists.sort_values(by=['dist'], ascending=False)[:k]
+        # Converted into a dictionary, and take the index of candidates as a list
+        List_index = df_nn.to_dict(orient='split').get('index')
+        # Converted into a dictionary, and take the similarity of candidates as a list
+        List_sort = df_nn.to_dict(orient='list').get('dist')
+
+        label_index = []
+        #Traverse the index of the candidate, and use these indexes to get the candidate label from the label list
+        for index in List_index:
+            label_index.append(y_train[index])
         counts = {}
-        classCount = {}
+        totalsimlarity = {}
         for i in range(k):
-            voteIlabel = df_index[i]
-            # Gewichtung
-            weight = Gaussian(df_sort[i], sigma=sigma)
-            classCount[voteIlabel] = classCount.get(voteIlabel, 0) + weight
+            voteIlabel = label_index[i]
+            #Match sample label to similarity
+            totalsimlarity[voteIlabel] = totalsimlarity.get(voteIlabel, 0) + List_sort[i]
+            #Record the number of the same label
             counts[voteIlabel] = counts.get(voteIlabel,0) + 1
 
-        for k,v in classCount.items():
-            classCount[k] = v/counts.get(k,1)
-
-        sortedClassCount = sorted(classCount.items(), key=lambda x:x[1], reverse=True)
-
-        # Takes the first distance value and determines if it is less than the threshold value
-        dis = df_sort[0]
-        #print(dis)
-        if(dis <= 5):
-
-            prediction = sortedClassCount[0][0]
-
-        else:
-            prediction = 'unknow'
-
+        for k,v in totalsimlarity.items():#Get the similarity in each type of face.
+            totalsimlarity[k] = v/counts.get(k,1)
+        #Sort in descending order of similarity
+        sortedtotalsimlarity = sorted(totalsimlarity.items(), key=lambda x:x[1], reverse=True)
+        
+        #take the label corresponding to the largest similarity as the prediction result.
+        prediction = sortedtotalsimlarity[0][0]
+        # if the largest similarity greater as 0.9,then take it as result
+        if sortedtotalsimlarity[0][1] > threshold:
         # Append prediction to output list
-        y_hat_test.append(prediction)
-        #print(y_hat_test)
+            y_hat_test.append(prediction)
+        else:
+            y_hat_test.append('unknow')
 
     return y_hat_test
 
