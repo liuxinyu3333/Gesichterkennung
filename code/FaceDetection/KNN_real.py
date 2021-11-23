@@ -16,7 +16,7 @@ from PIL import Image, ImageDraw
 
 def Gaussian(distance, sigma = 9.0):
     #Input a distance and return it`s weight
-    weight = np.exp(-distance**2/(2*sigma**2))
+    weight = 1/(sigma*(6.28**0.5))*np.exp(-distance**2/(2*sigma**2))
     return weight
 
 def minkowski_distance(a, b, p=1):
@@ -34,7 +34,27 @@ def minkowski_distance(a, b, p=1):
 
     return distance
 
-def similarity(a, b, sigma = 9.0):
+def similarity_inverse(a, b, sigma = 0.4):
+    # Store the number of dimensions
+    dim = len(a)
+
+    # Set initial weight to 0
+    weight = 0
+    # Calculate similarity
+    for d in range(dim):
+        # Weight the difference in each dimension with inverse function
+        # and add up the weights of all dimensions
+
+        weight += 1/(abs(a[d] - b[d])+1)
+    #Get overall geometric similarity
+    sim = weight/dim
+
+    return sim
+
+
+
+
+def similarity_gaussian(a, b, sigma = 0.4):
     # Store the number of dimensions
     dim = len(a)
 
@@ -44,7 +64,8 @@ def similarity(a, b, sigma = 9.0):
     for d in range(dim):
         # Weight the difference in each dimension with Gaussian function
         # and add up the weights of all dimensions
-        weight += np.exp(-abs(a[d] - b[d])**2/(2*sigma**2))
+
+        weight += (sigma*(6.28**0.5))*np.exp(-abs(a[d] - b[d])**2/(2*sigma**2))
     #Get overall geometric similarity
     sim = weight/dim
 
@@ -119,7 +140,7 @@ def weighted_knn_predict(X_train, X_test, y_train, k = 10, sigma = 9.0, threshol
         sim = []
         #Get the similarity between the face to be predicted and each sample face
         for train_point in X_train:
-            s = similarity(test_point, train_point,sigma = sigma)
+            s = similarity_gaussian(test_point, train_point,sigma = sigma)
             sim.append(s)
 
         # Store similarities in a dataframe

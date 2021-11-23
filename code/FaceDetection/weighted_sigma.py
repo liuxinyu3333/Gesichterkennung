@@ -56,7 +56,7 @@ for k in range(1,10):
 
     for test_point in X_test:#Traverse all faces to be predicted
         #Predict face identity by weighted knn
-        label = kt.weighted_knn_predict(X_train=X, X_test=test_point.reshape(1, -1), y_train=Y, k=20, sigma = k)[0]
+        label = kt.weighted_knn_predict(X_train=X, X_test=test_point.reshape(1, -1), y_train=Y, k=20, sigma = k*0.1)[0]
         #Forecast result storage
         y_hat_test.append(label)
 

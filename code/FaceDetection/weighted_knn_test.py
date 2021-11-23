@@ -39,9 +39,13 @@ for class_dir in os.listdir("examples/Harrypotter_test"):
         try:
             image = fr.load_image_file(img_path)#Load image from image path
             boxes = fr.face_locations(image)#Get the position of the face in the picture
+
             # Returns a vector of 128 dimensions
             X_test.append(fr.face_encodings(image, known_face_locations=boxes)[0])#Test set face vector
             Y_test.append(class_dir)#Test set face vector corresponding label
+
+            #print(img_path)
+
         except:
             print('failed!')
 
@@ -57,10 +61,13 @@ for k in range(1,len(Y)+1):
     count = 0  # right result of knn
     for test_point in X_test:#Traverse all faces to be predicted
         #Predict face identity by weighted knn
-        label = kt.weighted_knn_predict(X_train=X, X_test=test_point.reshape(1, -1), y_train=Y, k=k, sigma = 9, threshold = 5)[0]
+        label = kt.weighted_knn_predict(X_train=X, X_test=test_point.reshape(1, -1), y_train=Y, k=k, sigma = 0.4, threshold = 0.9)[0]
         if Y_test[i] == label:
             count = count + 1
-
+        else:
+            print("i=",i)
+            print(Y_test[i])
+            print(label)
         #Forecast result storage
         i=i+1
 
