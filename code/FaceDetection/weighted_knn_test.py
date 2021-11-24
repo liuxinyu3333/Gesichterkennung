@@ -51,7 +51,7 @@ for class_dir in os.listdir("examples/Harrypotter_test"):
 
 #accuracies_weight = []
 accuracies = []
-y_hat_test = []#Prediction results of knn algorithm
+accuracies_inverse = []
 
 #Testing the effect of different k on the accuracy of knn
 
@@ -59,9 +59,12 @@ for k in range(1,len(Y)+1):
     y_hat_test = []
     i = 0
     count = 0  # right result of knn
+    count_inverse = 0
     for test_point in X_test:#Traverse all faces to be predicted
         #Predict face identity by weighted knn
-        label = kt.weighted_knn_predict(X_train=X, X_test=test_point.reshape(1, -1), y_train=Y, k=k, sigma = 0.4, threshold = 0.9)[0]
+        label = kt.weighted_knn_predict(X_train=X, X_test=test_point.reshape(1, -1), y_train=Y, k=k, sigma = 0.4, threshold = 0.9, weight = 0)[0]
+        label_inverse = kt.weighted_knn_predict(X_train=X, X_test=test_point.reshape(1, -1), y_train=Y, k=k, sigma=0.4, threshold=0.9, weight=1)[0]
+
         if Y_test[i] == label:
             count = count + 1
         else:
@@ -69,20 +72,27 @@ for k in range(1,len(Y)+1):
             print(Y_test[i])
             print(label)
         #Forecast result storage
+        if Y_test[i] == label_inverse:
+            count_inverse = count_inverse + 1
+
         i=i+1
 
     # Calculation Accuracy
 
     print("Accuracy : {:.2f} %, bei k : ".format((count / len(Y_test)) * 100), format(k))
     accuracies.append(count / len(Y_test))
+    accuracies_inverse.append((count_inverse / len(Y_test)))
 
 
 # Plot the results
 
-plt.plot(range(1,len(Y)+1), accuracies,label = "knn")
+plt.plot(range(1,len(Y)+1), accuracies,label = "knn_gaussian")
 plt.xlabel('# of Nearest Neighbors (k)')
-
 plt.ylabel('Accuracy (%)')
+plt.show()
 
 
+plt.plot(range(1,len(Y)+1), accuracies_inverse,label = "knn_inverse")
+plt.xlabel('# of Nearest Neighbors (k)')
+plt.ylabel('Accuracy (%)')
 plt.show()

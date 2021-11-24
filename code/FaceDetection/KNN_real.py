@@ -128,7 +128,7 @@ def knn_predict(X_train, X_test, y_train, k, p = 2, threshold = 0.5):
     return y_hat_test
 
 
-def weighted_knn_predict(X_train, X_test, y_train, k = 10, sigma = 9.0, threshold = 0.9):
+def weighted_knn_predict(X_train, X_test, y_train, k = 10, sigma = 9.0, threshold = 0.9, weight = 0):
     # Counter to help with label voting
     # from collections import Counter
 
@@ -140,7 +140,10 @@ def weighted_knn_predict(X_train, X_test, y_train, k = 10, sigma = 9.0, threshol
         sim = []
         #Get the similarity between the face to be predicted and each sample face
         for train_point in X_train:
-            s = similarity_gaussian(test_point, train_point,sigma = sigma)
+            if weight == 0:
+                s = similarity_gaussian(test_point, train_point,sigma = sigma)
+            else:
+                s = similarity_inverse(test_point, train_point, sigma=sigma)
             sim.append(s)
 
         # Store similarities in a dataframe
