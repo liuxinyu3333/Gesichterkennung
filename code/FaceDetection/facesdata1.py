@@ -40,16 +40,25 @@ for i in range(len(X)-1):
         distance_sam = 0
         distance_diff = 0
         max_sam = 0
+
+
+
     # Calculate minkowski distance using parameter p
         for d in range(dim):
 
         #if abs(X[i][d] - X[i+1][d])>0.08:
 
             if Y[i] != Y[j]:
+                if len(dis_diff)>112256:
+                    continue
+                count_diff +=1
                 dis_diff.append(X[i][d] - X[j][d])
 
             if  Y[i] == Y[j]:
+                count_sam += 1
                 dis_sam.append(X[i][d] - X[j][d])
+
+
 
 
 
@@ -72,4 +81,5 @@ plt.show()
 print("The variance of the difference of each dimension of face feature vectors of different person: ",np.var(dis_diff))
 print("The variance of the difference of each dimension of face feature vectors of same person: ",np.var(dis_sam))
 
-
+print("Group of the difference person's face: ",count_diff)
+print("Group of the same person's face: ",count_sam)

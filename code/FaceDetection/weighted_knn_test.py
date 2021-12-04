@@ -62,8 +62,8 @@ for k in range(1,len(Y)+1):
     count_inverse = 0
     for test_point in X_test:#Traverse all faces to be predicted
         #Predict face identity by weighted knn
-        label = kt.weighted_knn_predict(X_train=X, X_test=test_point.reshape(1, -1), y_train=Y, k=k, sigma = 0.4, threshold = 0.9, weight = 0)[0]
-        label_inverse = kt.weighted_knn_predict(X_train=X, X_test=test_point.reshape(1, -1), y_train=Y, k=k, sigma=0.4, threshold=0.9, weight=1)[0]
+        label = kt.weighted_knn_predict(X_train=X, X_test=test_point.reshape(1, -1), y_train=Y, k=k, threshold = 0.9, weight = 0)[0]
+        label_inverse = kt.weighted_knn_predict(X_train=X, X_test=test_point.reshape(1, -1), y_train=Y, k=k, threshold=0.9, weight=1)[0]
 
         if Y_test[i] == label:
             count = count + 1

@@ -4,13 +4,12 @@
 #
 import time
 import dlib
-
-
 import os
 from face_recognition.face_recognition_cli import image_files_in_folder
 import pandas as pd
 import numpy as np
 import face_recognition as fr
+import math
 
 from PIL import Image, ImageDraw
 
@@ -54,7 +53,7 @@ def similarity_inverse(a, b, sigma = 0.4):
 
 
 
-def similarity_gaussian(a, b, sigma = 0.4):
+def similarity_gaussian(a, b, sigma = 1.0/math.sqrt(2*math.pi)):
     # Store the number of dimensions
     dim = len(a)
 
@@ -128,7 +127,7 @@ def knn_predict(X_train, X_test, y_train, k, p = 2, threshold = 0.5):
     return y_hat_test
 
 
-def weighted_knn_predict(X_train, X_test, y_train, k = 10, sigma = 9.0, threshold = 0.9, weight = 0):
+def weighted_knn_predict(X_train, X_test, y_train, k = 10, threshold = 0.9, weight = 0):
     # Counter to help with label voting
     # from collections import Counter
 
@@ -141,9 +140,9 @@ def weighted_knn_predict(X_train, X_test, y_train, k = 10, sigma = 9.0, threshol
         #Get the similarity between the face to be predicted and each sample face
         for train_point in X_train:
             if weight == 0:
-                s = similarity_gaussian(test_point, train_point,sigma = sigma)
+                s = similarity_gaussian(test_point, train_point)
             else:
-                s = similarity_inverse(test_point, train_point, sigma=sigma)
+                s = similarity_inverse(test_point, train_point)
             sim.append(s)
 
         # Store similarities in a dataframe
